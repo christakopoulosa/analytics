@@ -77,3 +77,22 @@ improvements %>%
   acast(word ~ sentiment, value.var = "n", fill = 0) %>%
   comparison.cloud(colors = c("#F8766D", "#00BFC4"),
                    max.words = 100)
+
+
+##Satisfaction level - Qualterly rolling data
+satisfactionLevel <- data_frame(date = mydata$ended, satisfactionLevel = mydata$satisfactionLevel) ##creates a data_frame where first column contains dates and second column contains satisfaction levels
+
+library(xts)
+satisfactionLevel <- xts(mydata[,c(9)], order.by = as.POSIXct(mydata$ended, format = c("%d/%m/%Y %H:%M:%OS"))) ##xts object where rows are based on dates
+
+##Plot satisfaction rates
+library(ggplot2)
+satisfactionLevel <- satisfactionLevel %>%
+  filter(date > "01/07/2017" & date <"31/10/2017") %>%
+  count(satisfactionLevel)
+
+
+geom_bar(satisfactionLevel,  aes(factor(ended) )
+sapply(satisfactionLevel, class)
+quarterly <- split(satisfactionLevel, "months", 4)
+ploy
