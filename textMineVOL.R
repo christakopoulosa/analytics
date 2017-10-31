@@ -42,3 +42,5 @@ wordcloud(words = corpus,
           max.words = 100,
           ordered.colors = FALSE,
           colors = brewer.pal(5, "Dark2")[factor(dataAsDataFrame$Q1..Overall..how.did.you.feel.about.the.service.you.received.today.)])
+
+
