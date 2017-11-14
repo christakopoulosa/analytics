@@ -37,17 +37,8 @@ monthlydataSessions <- google_analytics_4(ga_id,
 
 
 
-# Define server logic required to draw a histogram ----
-server <- function(input, output) {
-  output$selected_var <- renderText({
-    "I don't know what I am doing"
-  })
-  
-  output$google_analytics <- renderPlot({
-    ggplot(data = monthlydataSessions, aes(x=yearMonth, y=sessions, group=1)) + geom_line()
-  
-  })
-}
+
+
 
 
 
@@ -66,23 +57,18 @@ ui <- fluidPage(
     # Sidebar panel for inputs ----
     sidebarPanel(
       "this is the sidebar",
-      dateRangeInput(inputId = "date", label = "Date range", start = "2017/10/21", end = "2017/10/31"),
+      dateRangeInput(inputId = "date", label = "Choose date range", start = "2017/10/21", end = "2017/10/31"),
       
-      # Input: Slider for the number of bins ----
-      sliderInput(inputId = "bins",
-                  label = "Number of bins:",
-                  min = 1,
-                  max = 50,
-                  value = 30)
+      # Add a checkbox to compare to previous period
+      checkboxInput("previousPeriod", label = "Compare to previous period")
       
     ),
     
     # Main panel for displaying outputs ----
     mainPanel(
-      h2("This is a graph for user satiafction"),
-      h2("This is a graph of task completions"),
-      h2("Test title 1"), #need to add of google analytics code 
-      h3("Test title 2"),
+      h2("User satisfaction", align = "center"),
+      h2("Task Performed", align = "center"),
+      h2("Popular Journeys", align = "center"), #need to add of google analytics code 
       textOutput("selected_var"),
       plotOutput("Satisfaction_level"),
       plotOutput("google_analytics"),
@@ -103,6 +89,18 @@ ui <- fluidPage(
         ggplot(data = monthlydataSessions, aes(x=yearMonth, y=sessions, group=1)) + geom_line()
         
       })
+      
+      output$google_analytics <- renderPlot({
+        ggplot(data = monthlydataSessions, aes(x=yearMonth, y=sessions, group=1)) + geom_bar()
+        
+      })
+      
+      
+      output$google_analytics <- renderPlot({
+        ggplot(mydata, aes(x=taskLevelOfDifficulty, y=sessions, group=1)) + geom_bar()
+        
+      })
+      
     }
   
 shinyApp(ui = ui, server = server)
