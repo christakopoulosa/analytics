@@ -37,11 +37,10 @@ ui <- dashboardPage(
     ),
     
     fluidRow(
-      box(width = 6, plotOutput("sankey")),
+      box(width = 6, plotOutput("userSatisfactionLineGraph")),
       infoBoxOutput("numberOfResponses"),
-           infoBoxOutput("another2"),
-          infoBoxOutput("another3")
-      
+      infoBoxOutput("another2"),
+      infoBoxOutput("another3")      
       
       )
     )
@@ -54,10 +53,11 @@ ui <- dashboardPage(
 server <- function(input, output) { 
   
   filteredData <- reactive({
-    req(input$dateRange) ##if statement in case the checkbox is used
+    req(input$dateRange)
     mydata[mydata$ended >= input$dateRange[1] & mydata$ended <= input$dateRange[2],]
   })
   
+
   output$boxPlot <- renderPlot(ggplot(filteredData(), aes(x=reorder(satisfactionLevel,satisfactionLevel,function(x)-length(x)))) +
                                  geom_bar(fill = "steelBlue") + xlab("Satisfaction Level") + 
                                     ylab("Count") + ggtitle("Count of satisfaction level") + theme_minimal()) 
@@ -65,7 +65,7 @@ server <- function(input, output) {
   output$boxPlot2 <- renderPlot(ggplot(filteredData(), aes(task, fill = taskLevelOfDifficulty)) + geom_bar() + 
                                          xlab("Task") + ylab("Count") + ggtitle("Level of difficulty of task performed") + theme_minimal())
   
-  output$sankey <- renderPlot(gvisSankey(mydata[,c(6,7,8)], from = "task", to = "taskLevelOfDifficultyReason"))
+  output$userSatisfactionLineGraph <- renderPlot(ggplot(filteredData(), aes(ended, satisfactionLevel)) + geom_line())
   
   output$numberOfResponses <- renderInfoBox({
     infoBox("Responses", nrow(filteredData()), icon = icon("hand-peace-o"), fill = TRUE)
