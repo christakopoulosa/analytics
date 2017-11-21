@@ -56,50 +56,50 @@ ui <- fluidPage(
     
     # Sidebar panel for inputs ----
     sidebarPanel(
+      
       "this is the sidebar",
       dateRangeInput(inputId = "date", label = "Choose date range", start = "2017/10/21", end = "2017/10/31"),
       
       # Add a checkbox to compare to previous period
-      checkboxInput("previousPeriod", label = "Compare to previous period")
+      checkboxInput("previousPeriod", label = "Compare to previous period"),
+      
+      #Slider
+      sliderInput(inputId = "num", 
+                  label = "Choose a number",
+                  value = 25, min =1, max =100
+                  )
+      
       
     ),
     
     # Main panel for displaying outputs ----
     mainPanel(
-      h2("User satisfaction", align = "center"),
-      h2("Task Performed", align = "center"),
-      h2("Popular Journeys", align = "center"), #need to add of google analytics code 
-      textOutput("selected_var"),
-      plotOutput("Satisfaction_level"),
-      plotOutput("google_analytics"),
       
-      # Output: Histogram ----
-      plotOutput(outputId = "distPlot")
+      textInput(inputId = "blankSpace", label = "Add a name for the histogram", value = "Is this the header that you want to put?"),
+      actionButton(inputId = "go", label = "Update"), 
+      plotOutput("hist"),
+      verbatimTextOutput("stats")
       
     )
   )
-)
+) 
    
     server <- function(input, output) {
-      output$selected_var <- renderText({
-        "I don't know what I am doing"
+      data <- eventReactive(input$go, {
+        rnorm(input$num)
       })
       
-      output$google_analytics <- renderPlot({
-        ggplot(data = monthlydataSessions, aes(x=yearMonth, y=sessions, group=1)) + geom_line()
+      output$hist <-renderPlot({
+        hist(data(),
+             main = input$blankSpace)
+             
+        })
+      
+      output$stats <-renderPrint({
+        summary(data())
+      })
         
-      })
       
-      output$google_analytics <- renderPlot({
-        ggplot(data = monthlydataSessions, aes(x=yearMonth, y=sessions, group=1)) + geom_bar()
-        
-      })
-      
-      
-      output$google_analytics <- renderPlot({
-        ggplot(mydata, aes(x=taskLevelOfDifficulty, y=sessions, group=1)) + geom_bar()
-        
-      })
       
     }
   

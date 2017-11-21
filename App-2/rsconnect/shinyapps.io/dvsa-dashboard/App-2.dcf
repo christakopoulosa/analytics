@@ -1,0 +1,12 @@
+name: App-2
+title: App-2
+username:
+account: dvsa-dashboard
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 235814
+bundleId: 1079039
+url: https://dvsa-dashboard.shinyapps.io/App-2/
+when: 1510844605.15011
+asMultiple: FALSE
+asStatic: FALSE
