@@ -14,9 +14,23 @@ mydata = fread("427915.csv", col.names = c("userID", "userNo", "name", "email", 
 mydata <- mydata[-c(1,2), ] ##delete first two rows
 
 mydata <- data_frame(userID = mydata$userID, userNo= mydata$userNo, ended =mydata$ended, satisfactionLevel = mydata$satisfactionLevel, improvements = mydata$improvements, task = mydata$task,
-                     taskLevelOfDifficulty = mydata$taskLevelOfDifficulty, mydata$taskLevelOfDifficultyReason)
+                     taskLevelOfDifficulty = mydata$taskLevelOfDifficulty, taskLevelOfDifficultyReason = mydata$taskLevelOfDifficultyReason)
+
+
 
 mydata <- mydata %>% 
+  mutate(ended = as.Date(ended, format = "%d/%m/%Y"))
+
+mydataWithWeeksAndWeights<- data_frame(ended = mydata$ended, week = format(mydata$ended, format = "%W"), satisfactionLevel = mydata$satisfactionLevel) %>%
+  mutate(weight = case_when(
+    satisfactionLevel == "Very dissatisfied" ~ 0,
+    satisfactionLevel == "Very satisfied" ~ 1,
+    satisfactionLevel == "Satisfied" ~ 0.75,
+    satisfactionLevel == "Neither satisfied nor dissatisfied" ~ 0.5,
+    satisfactionLevel == "Dissatisfied" ~ 0.25))
+  
+
+mydataWithWeeksAndWeights <- mydataWithWeeksAndWeights %>% 
   mutate(ended = as.Date(ended, format = "%d/%m/%Y"))
 
 
@@ -37,7 +51,7 @@ ui <- dashboardPage(
     ),
     
     fluidRow(
-      box(width = 6, plotOutput("userSatisfactionLineGraph")),
+      box(width = 6, dataTableOutput("userSatisfactionLineGraph")),
       infoBoxOutput("numberOfResponses"),
       infoBoxOutput("another2"),
       infoBoxOutput("another3")      
@@ -57,26 +71,33 @@ server <- function(input, output) {
     mydata[mydata$ended >= input$dateRange[1] & mydata$ended <= input$dateRange[2],]
   })
   
+  filteredDataWithWeeks <- reactive ({
+    req(input$dateRange)
+    mydataWithWeeksAndWeights[mydataWithWeeksAndWeights$ended >= input$dateRange[1] & mydataWithWeeksAndWeights$ended <= input$dateRange[2],]
+    
+  })
+  
 
   output$boxPlot <- renderPlot(ggplot(filteredData(), aes(x=reorder(satisfactionLevel,satisfactionLevel,function(x)-length(x)))) +
                                  geom_bar(fill = "steelBlue") + xlab("Satisfaction Level") + 
                                     ylab("Count") + ggtitle("Count of satisfaction level") + theme_minimal()) 
   
   output$boxPlot2 <- renderPlot(ggplot(filteredData(), aes(task, fill = taskLevelOfDifficulty)) + geom_bar() + 
-                                         xlab("Task") + ylab("Count") + ggtitle("Level of difficulty of task performed") + theme_minimal())
+                                         xlab("Task") + ylab("Count") + ggtitle("Level of difficulty of task performed") + 
+                                        theme_minimal() + theme(axis.text.x = element_text(angle = 15, hjust = 1)))
   
-  output$userSatisfactionLineGraph <- renderPlot(ggplot(filteredData(), aes(ended, satisfactionLevel)) + geom_line())
+  output$userSatisfactionLineGraph <- renderDataTable(filteredDataWithWeeks())
   
   output$numberOfResponses <- renderInfoBox({
-    infoBox("Responses", nrow(filteredData()), icon = icon("hand-peace-o"), fill = TRUE)
+    infoBox("Responses for specified period", nrow(filteredData()), icon = icon("user"), fill = TRUE)
   })
   
   output$another2 <- renderInfoBox({
-    infoBox("XYZ", nrow(filteredData()), icon = icon("bath"), fill = TRUE)
+    infoBox("Total responses", nrow(mydata), icon = icon("users"), fill = TRUE)
   })
   
   output$another3 <- renderInfoBox({
-    infoBox("XYZ", nrow(filteredData()), icon = icon("battery-quarter"), fill = TRUE)
+    infoBox("XYZ", nrow(filteredData()), icon = icon("hashtag "), fill = TRUE)
   })
 }
 
