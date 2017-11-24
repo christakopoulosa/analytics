@@ -78,11 +78,11 @@ server <- function(input, output) {
   })
   
 
-  output$boxPlot <- renderPlot(ggplot(filteredData(), aes(x=reorder(satisfactionLevel,satisfactionLevel,function(x)-length(x)))) +
+  output$boxPlot <- renderPlot(ggplot(filteredData(), aes(x = reorder(satisfactionLevel, satisfactionLevel, function(x) - length(x)))) +
                                  geom_bar(fill = "steelBlue") + xlab("Satisfaction Level") + 
                                     ylab("Count") + ggtitle("Count of satisfaction level") + theme_minimal()) 
   
-  output$boxPlot2 <- renderPlot(ggplot(filteredData(), aes(task, fill = taskLevelOfDifficulty)) + geom_bar() + 
+  output$boxPlot2 <- renderPlot(ggplot(filteredData(), aes(x = reorder(task, task, function(x) - length(x)), fill = taskLevelOfDifficulty)) + geom_bar() + 
                                          xlab("Task") + ylab("Count") + ggtitle("Level of difficulty of task performed") + 
                                         theme_minimal() + theme(axis.text.x = element_text(angle = 15, hjust = 1)))
   
