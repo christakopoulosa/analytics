@@ -27,13 +27,10 @@ mydataWithWeeksAndWeights<- data_frame(ended = mydata$ended, week = format(mydat
     satisfactionLevel == "Very satisfied" ~ 1,
     satisfactionLevel == "Satisfied" ~ 0.75,
     satisfactionLevel == "Neither satisfied nor dissatisfied" ~ 0.5,
-    satisfactionLevel == "Dissatisfied" ~ 0.25))
-  
-
-mydataWithWeeksAndWeights <- mydataWithWeeksAndWeights %>% 
+    satisfactionLevel == "Dissatisfied" ~ 0.25)) %>% 
   mutate(ended = as.Date(ended, format = "%d/%m/%Y"))
 
-
+pivotTable <- mydataWithWeeksAndWeights %>% group_by(week, weight) %>% count(satisfactionLevel)
 
 ui <- dashboardPage(
   skin = "black",
@@ -51,7 +48,7 @@ ui <- dashboardPage(
     ),
     
     fluidRow(
-      box(width = 6, dataTableOutput("userSatisfactionLineGraph")),
+      box(width = 6, plotOutput("userSatisfactionLineGraph")),
       infoBoxOutput("numberOfResponses"),
       infoBoxOutput("another2"),
       infoBoxOutput("another3")      
@@ -80,13 +77,13 @@ server <- function(input, output) {
 
   output$boxPlot <- renderPlot(ggplot(filteredData(), aes(x = reorder(satisfactionLevel, satisfactionLevel, function(x) - length(x)))) +
                                  geom_bar(fill = "steelBlue") + xlab("Satisfaction Level") + 
-                                    ylab("Count") + ggtitle("Count of satisfaction level") + theme_minimal()) 
+                                    ylab("Count") + ggtitle("Satisfaction level") + theme_minimal()) 
   
   output$boxPlot2 <- renderPlot(ggplot(filteredData(), aes(x = reorder(task, task, function(x) - length(x)), fill = taskLevelOfDifficulty)) + geom_bar() + 
-                                         xlab("Task") + ylab("Count") + ggtitle("Level of difficulty of task performed") + 
+                                         xlab("Task") + ylab("Count") + ggtitle("Task difficulty") + labs(fill = "Task level of difficulty") +
                                         theme_minimal() + theme(axis.text.x = element_text(angle = 15, hjust = 1)))
   
-  output$userSatisfactionLineGraph <- renderDataTable(filteredDataWithWeeks())
+  output$userSatisfactionLineGraph <- renderPlot(ggplot(pivotTable, aes(week, (n*weight), group=2)) + geom_line())
   
   output$numberOfResponses <- renderInfoBox({
     infoBox("Responses for specified period", nrow(filteredData()), icon = icon("user"), fill = TRUE)
