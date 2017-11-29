@@ -30,7 +30,8 @@ mydataWithWeeksAndWeights<- data_frame(ended = mydata$ended, week = format(mydat
     satisfactionLevel == "Dissatisfied" ~ 0.25)) %>% 
   mutate(ended = as.Date(ended, format = "%d/%m/%Y"))
 
-pivotTable <- mydataWithWeeksAndWeights %>% group_by(week, weight) %>% count(satisfactionLevel)
+pivotTable <- mydataWithWeeksAndWeights %>% group_by(year_week = format(as.Date(ended, "%d/%m/%Y"), "%Y-%W"), weight) %>% count(satisfactionLevel)
+pivotTable2 <- pivotTable %>% mutate(multiply = weight * n) %>% group_by(year_week) %>% summarize(denominator = sum(n), nominator = sum(multiply)) %>% mutate(satisfaction = nominator / denominator)
 
 ui <- dashboardPage(
   skin = "black",
@@ -83,7 +84,7 @@ server <- function(input, output) {
                                          xlab("Task") + ylab("Count") + ggtitle("Task difficulty") + labs(fill = "Task level of difficulty") +
                                         theme_minimal() + theme(axis.text.x = element_text(angle = 15, hjust = 1)))
   
-  output$userSatisfactionLineGraph <- renderPlot(ggplot(pivotTable, aes(week, (n*weight), group=2)) + geom_line())
+  output$userSatisfactionLineGraph <- renderPlot(ggplot(pivotTable2, aes(year_week, satisfaction, group=1)) + geom_line() + theme(axis.text.x = element_text(angle = 90, hjust = 1)))
   
   output$numberOfResponses <- renderInfoBox({
     infoBox("Responses for specified period", nrow(filteredData()), icon = icon("user"), fill = TRUE)
