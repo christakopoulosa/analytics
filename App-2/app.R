@@ -54,9 +54,13 @@ ui <- dashboardPage(
       infoBoxOutput("another2"),
       infoBoxOutput("another3")      
       
-      )
+      ),
+    
+    fluidRow(
+      box(width = 12, dataTableOutput("allDataTable"))
     )
   )
+)
 
 
 
@@ -106,8 +110,10 @@ server <- function(input, output) {
   })
   
   output$another3 <- renderInfoBox({
-    infoBox("Weekly satisfaction rate", tail(filteredDataWithWeeksAndWeights2()[,c(4)], n=1), icon = icon("hashtag "), fill = TRUE)
+    infoBox("Satisfaction - End week of specified period", paste0(as.numeric(tail(filteredDataWithWeeksAndWeights2()[,c(4)], n=1))*100, "%"), icon = icon("hashtag "), fill = TRUE)
   })
+  
+  output$allDataTable <- renderDataTable(filteredData())
 }
 
 
