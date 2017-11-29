@@ -6,6 +6,8 @@ library(data.table)
 library(dplyr)
 library(reshape2)
 library(googleVis)
+library(xts)
+library(dygraphs)
 
 mydata = fread("427915.csv", col.names = c("userID", "userNo", "name", "email", "ip","uniqueID", "started", "ended",
                                            "satisfactionLevel", "improvements", "task", "taskLevelOfDifficulty", "taskLevelOfDifficultyReason"));mydata
@@ -30,8 +32,6 @@ mydataWithWeeksAndWeights<- data_frame(ended = mydata$ended, week = format(mydat
     satisfactionLevel == "Dissatisfied" ~ 0.25)) %>% 
   mutate(ended = as.Date(ended, format = "%d/%m/%Y"))
 
-pivotTable <- mydataWithWeeksAndWeights %>% group_by(year_week = format(as.Date(ended, "%d/%m/%Y"), "%Y-%W"), weight) %>% count(satisfactionLevel)
-pivotTable2 <- pivotTable %>% mutate(multiply = weight * n) %>% group_by(year_week) %>% summarize(denominator = sum(n), nominator = sum(multiply)) %>% mutate(satisfaction = nominator / denominator)
 
 ui <- dashboardPage(
   skin = "black",
@@ -75,6 +75,15 @@ server <- function(input, output) {
     
   })
   
+  
+  filteredDataWithWeeksAndWeights2 <- reactive({
+    req(input$dateRange)
+    mydataWithWeeksAndWeights2 <- mydataWithWeeksAndWeights[mydataWithWeeksAndWeights$ended >= input$dateRange[1] & mydataWithWeeksAndWeights$ended <= input$dateRange[2],]
+    pivotTable <- mydataWithWeeksAndWeights2 %>% group_by(year_week = format(as.Date(ended, "%d/%m/%Y"), "%Y-%W"), weight) %>% count(satisfactionLevel)
+    pivotTable2 <- pivotTable %>% mutate(multiply = weight * n) %>% group_by(year_week) %>% summarize(denominator = sum(n), nominator = sum(multiply)) %>% mutate(satisfaction = nominator / denominator)
+    
+  })
+  
 
   output$boxPlot <- renderPlot(ggplot(filteredData(), aes(x = reorder(satisfactionLevel, satisfactionLevel, function(x) - length(x)))) +
                                  geom_bar(fill = "steelBlue") + xlab("Satisfaction Level") + 
@@ -84,7 +93,9 @@ server <- function(input, output) {
                                          xlab("Task") + ylab("Count") + ggtitle("Task difficulty") + labs(fill = "Task level of difficulty") +
                                         theme_minimal() + theme(axis.text.x = element_text(angle = 15, hjust = 1)))
   
-  output$userSatisfactionLineGraph <- renderPlot(ggplot(pivotTable2, aes(year_week, satisfaction, group=1)) + geom_line() + theme(axis.text.x = element_text(angle = 90, hjust = 1)))
+  output$userSatisfactionLineGraph <- renderPlot(ggplot(filteredDataWithWeeksAndWeights2(), aes(year_week, satisfaction, group=1)) + geom_line() + theme_minimal() +
+                                                   xlab("Week of the year") + ylab("Weekly satisfaction level") + ggtitle("User satisfaction") + 
+                                                 theme(axis.text.x = element_text(angle = 90, hjust = 1)))
   
   output$numberOfResponses <- renderInfoBox({
     infoBox("Responses for specified period", nrow(filteredData()), icon = icon("user"), fill = TRUE)
@@ -95,7 +106,7 @@ server <- function(input, output) {
   })
   
   output$another3 <- renderInfoBox({
-    infoBox("XYZ", nrow(filteredData()), icon = icon("hashtag "), fill = TRUE)
+    infoBox("Weekly satisfaction rate", tail(filteredDataWithWeeksAndWeights2()[,c(4)], n=1), icon = icon("hashtag "), fill = TRUE)
   })
 }
 
