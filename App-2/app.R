@@ -4,10 +4,6 @@ library(shinydashboard)
 library(ggplot2)
 library(data.table)
 library(dplyr)
-library(reshape2)
-library(googleVis)
-library(xts)
-library(dygraphs)
 
 mydata = fread("427915.csv", col.names = c("userID", "userNo", "name", "email", "ip","uniqueID", "started", "ended",
                                            "satisfactionLevel", "improvements", "task", "taskLevelOfDifficulty", "taskLevelOfDifficultyReason"));mydata
@@ -113,7 +109,7 @@ server <- function(input, output) {
     infoBox("Satisfaction - End week of specified period", paste0(as.numeric(tail(filteredDataWithWeeksAndWeights2()[,c(4)], n=1))*100, "%"), icon = icon("hashtag "), fill = TRUE)
   })
   
-  output$allDataTable <- renderDataTable(filteredData())
+  output$allDataTable <- renderDataTable(filteredData() %>% arrange(-row_number()))
 }
 
 
